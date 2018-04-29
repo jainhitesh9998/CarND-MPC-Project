@@ -2,12 +2,10 @@
 #include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include "Eigen-3.3/Eigen/Core"
-#define for_loop(iterator, limit) for(unsigned it = iterator; it < limit; it++)
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 25;
-double dt = 0.05;
+
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -30,7 +28,7 @@ size_t epsi_start = cte_start + N;
 size_t delta_start = epsi_start + N;
 size_t a_start = delta_start + N - 1;
 
-const double Lf = 2.67;
+
 
 class FG_eval {
  public:
@@ -44,18 +42,19 @@ class FG_eval {
     // `fg` a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
     // NOTE: You'll probably go back and forth between this function and
     // the Solver function below.
-    unsigned short weight_cte = 1;
-    unsigned short weight_epsi = 1 ;
-    unsigned short weight_vstart = 1;
-    unsigned short weight_delta_sq = 1;
-    unsigned short weight_a_sq = 1;
-    unsigned short weight_delta_diff = 1;
-    unsigned short weight_a_diff = 1;
+    unsigned short weight_cte = 3100;
+    unsigned short weight_epsi = 2900 ;
+    unsigned short weight_vdiff = 5;
+    unsigned short weight_delta_sq = 10;
+    unsigned short weight_a_sq = 720;
+    unsigned short weight_delta_diff = 200;
+    unsigned short weight_a_diff = 20;
     fg[0] = 0;
+    
     for_loop(0,N){
       fg[0] += weight_cte * CppAD::pow(vars[cte_start + it] , 2);
       fg[0] += weight_epsi * CppAD::pow(vars[epsi_start + it], 2);
-      fg[0] += weight_vstart * CppAD::pow(vars[v_start + it], 2);
+      fg[0] += weight_vdiff * CppAD::pow(vars[v_start + it] - speed_limit_in_simulator, 2);
     }
     for_loop(0, N-1){
       fg[0] += weight_delta_sq *  CppAD::pow(vars[delta_start + it], 2);
@@ -112,6 +111,7 @@ MPC::MPC() {}
 MPC::~MPC() {}
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
+  vector<double> ret;
   bool ok = true;
   size_t i;
   typedef CPPAD_TESTVECTOR(double) Dvector;
@@ -235,8 +235,12 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   //
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
   // creates a 2 element double vector.
-  return {solution.x[x_start + 1],   solution.x[y_start + 1],
-          solution.x[psi_start + 1], solution.x[v_start + 1],
-          solution.x[cte_start + 1], solution.x[epsi_start + 1],
-          solution.x[delta_start],   solution.x[a_start]};
+  ret.push_back( - solution.x[delta_start]);
+  ret.push_back(solution.x[a_start]);
+  for_loop(0,N)
+  {
+    ret.push_back(solution.x[x_start + it]);
+    ret.push_back(solution.x[y_start + it]);
+  }
+  return ret;
 }

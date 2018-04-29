@@ -10,6 +10,8 @@
 #include "json.hpp"
 
 // for convenience
+inline pair<double,double> transform_coordinate(const double &x,const double &y,const double &psi);
+
 using json = nlohmann::json;
 
 // For converting back and forth between radians and degrees.
@@ -65,6 +67,12 @@ Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
   return result;
 }
 
+inline pair<double,double> transform_coordinate(const double &x,const double &y,const double &psi){
+  pair<double,double> output;
+  output.first = x * cos(-psi) - y * sin(-psi);
+  output.second = y * cos(-psi) + x * sin(-psi);
+  return output;
+}
 int main() {
   uWS::Hub h;
 
@@ -76,6 +84,7 @@ int main() {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+    pair<double,double> xy;
     string sdata = string(data).substr(0, length);
     cout << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
@@ -91,6 +100,8 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double delta = j[1]["steering_angle"];
+          double throttle = j[1]["throttle"];
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -98,8 +109,21 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
+          unsigned _size = ptsx.size();
+          Eigen::VectorXd transformed_ptsx(_size);
+          Eigen::VectorXd transformed_ptsy(_size);
+          for_loop(0,_size){
+            xy = transform_coordinate(ptsx[it] - px ,ptsy[it] - py, psi);
+            transformed_ptsx[it] = xy.first;
+            transformed_ptsy[it] = xy.second;
+          }
+          
+          auto coeffs = polyfit(transformed_ptsx, transformed_ptsy, 3);
+          double cte = polyeval(coeffs, 0);
+          double epsi = -atan(coeffs[1]);
+            
           Eigen::VectorXd state(6);
-          state << x, y, psi, v, cte, epsi;
+          state << v * dt , 0.0 , v * -delta / Lf * dt , v + throttle * dt, cte + v * sin(epsi) * dt, epsi + v * -delta / Lf * dt;
           std::vector<double> x_vals = {state[0]};
           std::vector<double> y_vals = {state[1]};
           std::vector<double> psi_vals = {state[2]};
@@ -110,19 +134,19 @@ int main() {
           std::vector<double> a_vals = {};
 
           auto vars = mpc.Solve(state, coeffs);
-          x_vals.push_back(vars[0]);
-          y_vals.push_back(vars[1]);
-          psi_vals.push_back(vars[2]);
-          v_vals.push_back(vars[3]);
-          cte_vals.push_back(vars[4]);
-          epsi_vals.push_back(vars[5]);
+//           x_vals.push_back(vars[0]);
+//           y_vals.push_back(vars[1]);
+//           psi_vals.push_back(vars[2]);
+//           v_vals.push_back(vars[3]);
+//           cte_vals.push_back(vars[4]);
+//           epsi_vals.push_back(vars[5]);
 
-          delta_vals.push_back(vars[6]);
-          a_vals.push_back(vars[7]);
+//           delta_vals.push_back(vars[6]);
+//           a_vals.push_back(vars[7]);
 
-
-          double steer_value;
-          double throttle_value;
+          
+          double steer_value = vars[0]/deg2rad(25);
+          double throttle_value = vars[1];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -133,6 +157,9 @@ int main() {
           //Display the MPC predicted trajectory
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
+          for_loop(2,vars.size()){
+            it % 2 == 0 ? mpc_x_vals.push_back(vars[it]) : mpc_y_vals.push_back(vars[it]);
+          }
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
@@ -143,6 +170,11 @@ int main() {
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
+          
+          for_loop(1,30){
+            next_x_vals.push_back(it*4);
+            next_y_vals.push_back(polyeval(coeffs, it * 4));
+          }
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
