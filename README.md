@@ -3,6 +3,61 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
+
+## Reflections
+
+
+**Model Predictive Control**
+
+The goals of this project are the following:
+
+* Implement a Model predictive control in C++.
+* To successfully run the car in simulator using the same.
+
+### What is MPC?
+MPC stands for model predictive control. Here we use kinematic model to calculate the trajectory of the car. The Kinematic model uses the car's x,y co-ordinates, orientation (psi), velocity, cte and the error in steering angle (epsi). The model uses these parameters to calculate the steering angle and throttle of the car for the next timestep.
+![MPC](images\equations.png)
+
+
+### Timestep Length and Elapsed Duration (N & dt):
+I have used a dt of 0.05 and N of 20, as this combination gave satisfactory results. This enables the model to predict the trajectory for 1s (0.05 * 20 = 1).
+
+
+### Polynomial Fitting and MPC Preprocessing:
+I have transformed the way-points from global to the vehicle co-ordinates, with vehicle at the origin (0,0). This eases the calculation while determining the trajectory of the car.
+
+```
+inline pair<double,double> transform_coordinate(const double &x,const double &y,const double &psi){
+
+	pair<double,double> output;
+
+	output.first = x * cos(-psi) - y * sin(-psi);
+
+	output.second = y * cos(-psi) + x * sin(-psi);
+
+	return output;
+
+}
+```
+
+I have used third order polynomial equation to predict the curves ahead. This will help in most of the cases of roads.
+
+
+### Model Predictive Control with Latency:
+There is always some delay between the actuation and the response from the vehicle. Thus we have to take into account this latency. The latency comes to 100ms in our system. Thus we have to adjust the state parameters with the latency.
+
+```
+double latency = 0.1;
+
+Eigen::VectorXd state(6);
+
+state << v * latency , 0.0 , v * -delta / Lf * latency , v + throttle * latency, cte + v * sin(epsi) * latency, epsi + v * -delta / Lf * latency;
+
+```
+
+
+
+
 ## Dependencies
 
 * cmake >= 3.5
