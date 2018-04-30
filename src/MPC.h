@@ -5,13 +5,13 @@
 #include "Eigen-3.3/Eigen/Core"
 
 #define for_loop(iterator, limit) for(unsigned it = iterator; it < limit; it++)
-#define speed_limit_in_simulator  5.0f
+#define speed_limit_in_simulator  50.0f
 // size_t N = 25;
 // double dt = 0.05;
 // const double Lf = 2.67;
 
-static size_t N = 15;
-static double dt = 0.1;
+static size_t N = 20;
+static double dt = 0.05;
 static double Lf = 2.67;
 
 using namespace std;

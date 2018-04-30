@@ -42,14 +42,14 @@ class FG_eval {
     // `fg` a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
     // NOTE: You'll probably go back and forth between this function and
     // the Solver function below.
-    unsigned short weight_cte = 3100;
-    unsigned short weight_epsi = 2900 ;
-    unsigned short weight_vdiff = 5;
-    unsigned short weight_delta_sq = 10;
-    unsigned short weight_a_sq = 720;
-    unsigned short weight_delta_diff = 200;
-    unsigned short weight_a_diff = 20;
-    fg[0] = 0;
+    unsigned short weight_cte = 100;
+    unsigned short weight_epsi = 50 ;
+    unsigned short weight_vdiff = 1;
+    unsigned short weight_delta_sq = 150;
+    unsigned short weight_a_sq = 150;
+    unsigned short weight_delta_diff = 3000;
+    unsigned short weight_a_diff = 150;
+    fg[0] = 0.0;
     
     for_loop(0,N){
       fg[0] += weight_cte * CppAD::pow(vars[cte_start + it] , 2);
@@ -65,7 +65,7 @@ class FG_eval {
       fg[0] += weight_delta_diff * CppAD::pow(vars[delta_start + it + 1] - vars[delta_start + it], 2);
       fg[0] += weight_a_diff *  CppAD::pow(vars[a_start + it + 1] - vars[a_start + it], 2);
     }
-    fg[1 + x_start] = vars[x_start];
+      fg[1 + x_start] = vars[x_start];
       fg[1 + y_start] = vars[y_start];
       fg[1 + psi_start] = vars[psi_start];
       fg[1 + v_start] = vars[v_start];
@@ -92,8 +92,8 @@ class FG_eval {
         AD<double> delta0 = vars[delta_start + it - 1];
         AD<double> a0 = vars[a_start + it - 1];
 
-        AD<double> f0 = coeffs[0] + coeffs[1] * x0;
-        AD<double> psides0 = CppAD::atan(coeffs[1]);
+        AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2]*pow(x0,2) + coeffs[3]*pow(x0,3);
+        AD<double> psides0 = CppAD::atan(coeffs[1]+ 2*coeffs[2]*x0 + 3*coeffs[3]*pow(x0,2));
         fg[1 + x_start + it] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
         fg[1 + y_start + it] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
         fg[1 + psi_start + it] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
@@ -138,12 +138,12 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     vars[i] = 0.0;
   }
 
-  vars[x_start] = x;
-  vars[y_start] = y;
-  vars[psi_start] = psi;
-  vars[v_start] = v;
-  vars[cte_start] = cte;
-  vars[epsi_start] = epsi;
+  // vars[x_start] = x;
+  // vars[y_start] = y;
+  // vars[psi_start] = psi;
+  // vars[v_start] = v;
+  // vars[cte_start] = cte;
+  // vars[epsi_start] = epsi;
 
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);
