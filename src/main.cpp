@@ -121,9 +121,9 @@ int main() {
           auto coeffs = polyfit(transformed_ptsx, transformed_ptsy, 3);
           double cte = polyeval(coeffs, 0);
           double epsi = -atan(coeffs[1]);
-            
+          double latency = 0.1;
           Eigen::VectorXd state(6);
-          state << v * dt , 0.0 , v * -delta / Lf * dt , v + throttle * dt, cte + v * sin(epsi) * dt, epsi + v * -delta / Lf * dt;
+          state << v * latency , 0.0 , v * -delta / Lf * latency , v + throttle * latency, cte + v * sin(epsi) * latency, epsi + v * -delta / Lf * latency;
           std::vector<double> x_vals = {state[0]};
           std::vector<double> y_vals = {state[1]};
           std::vector<double> psi_vals = {state[2]};

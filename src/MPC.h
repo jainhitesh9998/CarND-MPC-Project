@@ -10,8 +10,8 @@
 // double dt = 0.05;
 // const double Lf = 2.67;
 
-static size_t N = 25;
-static double dt = 0.05;
+static size_t N = 15;
+static double dt = 0.1;
 static double Lf = 2.67;
 
 using namespace std;
