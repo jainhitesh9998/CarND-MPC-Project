@@ -16,7 +16,7 @@ The goals of this project are the following:
 
 ### What is MPC?
 MPC stands for model predictive control. Here we use kinematic model to calculate the trajectory of the car. The Kinematic model uses the car's x,y co-ordinates, orientation (psi), velocity, cte and the error in steering angle (epsi). The model uses these parameters to calculate the steering angle and throttle of the car for the next timestep.
-![MPC](images\equations.png)
+![MPC](.\equations.png)
 
 
 ### Timestep Length and Elapsed Duration (N & dt):
