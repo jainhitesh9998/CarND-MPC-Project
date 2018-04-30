@@ -134,15 +134,6 @@ int main() {
           std::vector<double> a_vals = {};
 
           auto vars = mpc.Solve(state, coeffs);
-//           x_vals.push_back(vars[0]);
-//           y_vals.push_back(vars[1]);
-//           psi_vals.push_back(vars[2]);
-//           v_vals.push_back(vars[3]);
-//           cte_vals.push_back(vars[4]);
-//           epsi_vals.push_back(vars[5]);
-
-//           delta_vals.push_back(vars[6]);
-//           a_vals.push_back(vars[7]);
 
           
           double steer_value = vars[0]/deg2rad(25);
